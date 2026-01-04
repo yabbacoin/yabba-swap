@@ -7,7 +7,14 @@ const PAIR_ADDRESS =
 const RAYDIUM_SWAP_URL =
   'https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=Bp6ph46cRm2kkxU36fgx23wK6LWHa63NttEqLw1w8Z9A'
 
-// Phantom deep link → Raydium com $YABBA selecionado
+/**
+ * MOBILE FLOWS (IMPORTANT)
+ * - Connect → open THIS SITE inside Phantom
+ * - Buy → open Raydium with $YABBA selected
+ */
+const PHANTOM_BROWSE_SITE =
+  'https://phantom.app/ul/browse/https://www.yabba-swap.com'
+
 const PHANTOM_RAYDIUM_DEEPLINK =
   'https://phantom.app/ul/browse/https%3A%2F%2Fraydium.io%2Fswap%2F%3FinputMint%3DSo11111111111111111111111111111111111111112%26outputMint%3DBp6ph46cRm2kkxU36fgx23wK6LWHa63NttEqLw1w8Z9A'
 
@@ -140,8 +147,10 @@ export default function Home() {
           <button
             onClick={() => {
               if (isMobile) {
-                window.location.href = PHANTOM_RAYDIUM_DEEPLINK
+                // 📱 MOBILE → open THIS SITE inside Phantom (wallet context)
+                window.location.href = PHANTOM_BROWSE_SITE
               } else {
+                // 🖥️ DESKTOP → normal connect
                 connect()
               }
             }}
@@ -202,7 +211,7 @@ export default function Home() {
         <button
           onClick={() => {
             if (isMobile) {
-              // 📱 MOBILE → deep link Phantom → Raydium ($YABBA)
+              // 📱 MOBILE → Phantom → Raydium ($YABBA)
               window.location.href = PHANTOM_RAYDIUM_DEEPLINK
             } else {
               // 🖥️ DESKTOP → modal Raydium
