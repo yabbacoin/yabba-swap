@@ -7,8 +7,8 @@ const PAIR_ADDRESS =
 const RAYDIUM_SWAP_URL =
   'https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=Bp6ph46cRm2kkxU36fgx23wK6LWHa63NttEqLw1w8Z9A'
 
-// Phantom deep link → abre diretamente o Raydium com $YABBA selecionado
-const PHANTOM_DEEPLINK =
+// Phantom deep link → Raydium com $YABBA selecionado
+const PHANTOM_RAYDIUM_DEEPLINK =
   'https://phantom.app/ul/browse/https%3A%2F%2Fraydium.io%2Fswap%2F%3FinputMint%3DSo11111111111111111111111111111111111111112%26outputMint%3DBp6ph46cRm2kkxU36fgx23wK6LWHa63NttEqLw1w8Z9A'
 
 export default function Home() {
@@ -140,7 +140,7 @@ export default function Home() {
           <button
             onClick={() => {
               if (isMobile) {
-                window.location.href = PHANTOM_DEEPLINK
+                window.location.href = PHANTOM_RAYDIUM_DEEPLINK
               } else {
                 connect()
               }
@@ -200,7 +200,15 @@ export default function Home() {
 
         {/* BUY BUTTON */}
         <button
-          onClick={() => setShowSwap(true)}
+          onClick={() => {
+            if (isMobile) {
+              // 📱 MOBILE → deep link Phantom → Raydium ($YABBA)
+              window.location.href = PHANTOM_RAYDIUM_DEEPLINK
+            } else {
+              // 🖥️ DESKTOP → modal Raydium
+              setShowSwap(true)
+            }
+          }}
           style={{
             position: 'absolute',
             bottom: isMobile ? 16 : 24,
@@ -306,8 +314,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* RAYDIUM SWAP MODAL (DESKTOP) */}
-      {showSwap && (
+      {/* RAYDIUM SWAP MODAL (DESKTOP ONLY) */}
+      {showSwap && !isMobile && (
         <div
           onClick={() => setShowSwap(false)}
           style={{
@@ -323,10 +331,10 @@ export default function Home() {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: isMobile ? '100%' : 420,
-              height: isMobile ? '100%' : 720,
+              width: 420,
+              height: 720,
               background: '#020617',
-              borderRadius: isMobile ? 0 : 20,
+              borderRadius: 20,
               overflow: 'hidden',
               position: 'relative'
             }}
