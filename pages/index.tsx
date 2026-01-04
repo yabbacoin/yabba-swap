@@ -7,8 +7,9 @@ const PAIR_ADDRESS =
 const RAYDIUM_SWAP_URL =
   'https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=Bp6ph46cRm2kkxU36fgx23wK6LWHa63NttEqLw1w8Z9A'
 
+// Phantom deep link → abre diretamente o Raydium com $YABBA selecionado
 const PHANTOM_DEEPLINK =
-  'https://phantom.app/ul/browse/https://www.yabba-swap.com'
+  'https://phantom.app/ul/browse/https%3A%2F%2Fraydium.io%2Fswap%2F%3FinputMint%3DSo11111111111111111111111111111111111111112%26outputMint%3DBp6ph46cRm2kkxU36fgx23wK6LWHa63NttEqLw1w8Z9A'
 
 export default function Home() {
   const { publicKey, connect } = useWallet()
@@ -305,7 +306,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* RAYDIUM SWAP MODAL */}
+      {/* RAYDIUM SWAP MODAL (DESKTOP) */}
       {showSwap && (
         <div
           onClick={() => setShowSwap(false)}
