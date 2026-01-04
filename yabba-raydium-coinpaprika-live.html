@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>YABBA / SOL — Live Chart</title>
+
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+  body {
+    margin: 0;
+    background: #0b0b0f;
+    font-family: Inter, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .card {
+    width: 460px;
+    background: #111318;
+    border-radius: 16px;
+    padding: 14px;
+    color: #fff;
+    box-shadow: 0 20px 40px rgba(0,0,0,.6);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .pair {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .sub {
+    font-size: 12px;
+    opacity: .6;
+  }
+
+  .price {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .change {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .up { color: #2ecc71; }
+  .down { color: #e74c3c; }
+
+  .timeframes {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .tf {
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    background: #1e222d;
+    opacity: .6;
+  }
+
+  .tf.active {
+    background: #6c5ce7;
+    opacity: 1;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .buy { background: #2ecc71; color: #000; }
+  .sell { background: #e74c3c; color: #fff; }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="header">
+    <div>
+      <div class="pair">YABBA / SOL</div>
+      <div class="sub">Raydium • CoinPaprika</div>
+    </div>
+    <div>
+      <div class="price" id="price">$—</div>
+      <div class="change" id="change">—</div>
+    </div>
+  </div>
+
+  <!-- TIMEFRAME TOGGLE -->
+  <div class="timeframes">
+    <div class="tf active" onclick="setTF('1h', this)">1H</div>
+    <div class="tf" onclick="setTF('5m', this)">5M</div>
+    <div class="tf" onclick="setTF('1m', this)">1M</div>
+  </div>
+
+  <div id="chart" style="height:260px"></div>
+
+  <div class="buttons">
+    <button class="buy" onclick="buy()">BUY</button>
+    <button class="sell" onclick="sell()">SELL</button>
+  </div>
+</div>
+
+<script>
+/* ===============================
+   CONFIG
+   =============================== */
+const COIN_ID =
+  'yabba-yabba-the-meme-coin-that-rules-them-all'
+
+const MINT =
+  'Bp6ph46cRm2kkxU36fgx23wK6LWHa63NttEqLw1w8Z9A'
+
+let currentTF = '1h'
+let priceLine = null
+
+/* ===============================
+   CHART INIT
+   =============================== */
+const chart = LightweightCharts.createChart(
+  document.getElementById('chart'),
+  {
+    layout: {
+      background: { color: '#111318' },
+      textColor: '#d1d4dc'
+    },
+    grid: {
+      vertLines: { color: '#1e222d' },
+      horzLines: { color: '#1e222d' }
+    },
+    timeScale: { timeVisible: true }
+  }
+)
+
+const candles = chart.addCandlestickSeries({
+  upColor: '#2ecc71',
+  downColor: '#e74c3c',
+  borderUpColor: '#2ecc71',
+  borderDownColor: '#e74c3c',
+  wickUpColor: '#2ecc71',
+  wickDownColor: '#e74c3c'
+})
+
+/* ===============================
+   LOAD DATA
+   =============================== */
+async function loadData() {
+  const end = Math.floor(Date.now() / 1000)
+  const start =
+    currentTF === '1h'
+      ? end - 60 * 60 * 24 * 7
+      : end - 60 * 60 * 6
+
+  const res = await fetch(
+    `https://api.coinpaprika.com/v1/coins/${COIN_ID}/ohlcv/historical?start=${start}&end=${end}&interval=1h`
+  )
+
+  const data = await res.json()
+
+  let formatted = data.map(c => ({
+    time: Math.floor(new Date(c.time_open).getTime() / 1000),
+    open: c.open,
+    high: c.high,
+    low: c.low,
+    close: c.close
+  }))
+
+  if (currentTF !== '1h') {
+    formatted = formatted.slice(-60)
+  }
+
+  candles.setData(formatted)
+}
+
+/* ===============================
+   LOAD PRICE + 24H CHANGE + PRICE LINE
+   =============================== */
+async function loadPrice() {
+  const res = await fetch(
+    `https://api.coinpaprika.com/v1/tickers/${COIN_ID}`
+  )
+  const json = await res.json()
+
+  const price = json.quotes.USD.price
+  const change24 = json.quotes.USD.percent_change_24h
+
+  document.getElementById('price').innerText =
+    '$' + price.toFixed(6)
+
+  const changeEl = document.getElementById('change')
+  const arrow = change24 >= 0 ? '▲' : '▼'
+  changeEl.innerText =
+    `${arrow} ${Math.abs(change24).toFixed(2)}%`
+  changeEl.className =
+    'change ' + (change24 >= 0 ? 'up' : 'down')
+
+  // REMOVE OLD PRICE LINE
+  if (priceLine) candles.removePriceLine(priceLine)
+
+  // ADD NEW PRICE LINE
+  priceLine = candles.createPriceLine({
+    price: price,
+    color: change24 >= 0 ? '#2ecc71' : '#e74c3c',
+    lineWidth: 2,
+    lineStyle: 2,
+    axisLabelVisible: true,
+    title: 'Price'
+  })
+}
+
+/* ===============================
+   TIMEFRAME SWITCH
+   =============================== */
+function setTF(tf, el) {
+  currentTF = tf
+  document.querySelectorAll('.tf')
+    .forEach(b => b.classList.remove('active'))
+  el.classList.add('active')
+  loadData()
+}
+
+/* ===============================
+   ACTIONS
+   =============================== */
+function buy() {
+  window.open(
+    'https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=' + MINT,
+    '_blank'
+  )
+}
+
+function sell() {
+  window.open(
+    'https://raydium.io/swap/?inputMint=' + MINT + '&outputMint=So11111111111111111111111111111111111111112',
+    '_blank'
+  )
+}
+
+/* ===============================
+   INIT
+   =============================== */
+loadData()
+loadPrice()
+setInterval(loadPrice, 10000)
+</script>
+
+</body>
+</html>
